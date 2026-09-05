@@ -1,0 +1,41 @@
+SELECT DATABASE();
+
+CREATE TABLE students (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    student_no VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    enroll_year INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SHOW TABLES;
+
+DESC students;
+
+CREATE TABLE courses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    course_code VARCHAR(20) NOT NULL UNIQUE,
+    course_name VARCHAR(100) NOT NULL,
+    credits DECIMAL(3,1) NOT NULL,
+    capacity INT DEFAULT 50,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SHOW TABLES;
+
+DESC courses;
+
+CREATE TABLE teachers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    teacher_no VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SHOW TABLES;
+
+DESC teachers;
+
+SHOW CREATE TABLE teachers;
