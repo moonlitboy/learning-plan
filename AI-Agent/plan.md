@@ -6,7 +6,9 @@
 > 实验平台：Pi Agent  
 > 对照工具：Codex、GitHub Copilot CLI、OpenCode Desktop  
 > 环境：macOS + zsh + Git（示例命令按此环境设计）  
-> 版本说明：本计划按 2026-09-10 的 Pi / Codex / DeepSeek / OpenRouter 官方资料设计。工具界面、模型名称和具体参数以后可能变化，因此学习重点始终放在底层概念，而不是死记按钮。
+> 版本说明：本计划于 2026-09-13 更新，并按当时的 Pi / Codex / DeepSeek / OpenRouter 官方资料设计。已为 Day 06～14 加入 Pi 的具体使用命令。工具界面、模型名称和具体参数以后可能变化，因此每次实操先用 `pi --help` 核对当前版本，学习重点仍放在底层概念，而不是死记按钮。
+> 当前进度：Day 01～Day 05 已完成；下一步从 Day 06 开始。
+> Pi 命令参考：[Pi Coding Agent 官方 README](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/README.md)
 
 ---
 
@@ -1095,6 +1097,64 @@ pi --help
 
 不要死背参数；理解 allowlist 思想。
 
+## 今日 Pi 命令实操
+
+先在终端进入实验仓库：
+
+```bash
+cd ~/Documents/agent-lab
+```
+
+第一轮，只允许只读工具：
+
+```bash
+pi --tools read,grep,find,ls
+```
+
+让 Pi 完成代码审查后，用 `/quit` 退出，再检查：
+
+```bash
+git status
+git diff
+```
+
+第二轮，加入编辑能力，但仍不开放任意 shell：
+
+```bash
+pi --tools read,grep,find,ls,edit
+```
+
+第三轮，只在已经创建 Git checkpoint 的实验仓库中加入 `bash`：
+
+```bash
+pi --tools read,grep,find,ls,edit,bash
+```
+
+还要分别观察下面两个边界：
+
+```bash
+pi --no-tools
+pi --no-builtin-tools
+```
+
+必须能解释：
+
+```text
+--no-tools
+→ 默认禁用所有 Tool
+
+--no-builtin-tools
+→ 默认禁用内置 Tool，但 Extension / 自定义 Tool 仍可能存在
+```
+
+`--exclude-tools` 用于从当前可用工具中排除指定工具，例如：
+
+```bash
+pi --exclude-tools bash,write,edit
+```
+
+注意：这属于 Pi Harness 的 Tool 配置，不等于 OS 级 Sandbox。
+
 ## 实验 1：只读 Agent
 
 只允许读取相关工具。
@@ -1212,6 +1272,51 @@ clang -std=c17 -Wall -Wextra -Wpedantic
 4. 不要为了消除 warning 随意改变程序语义
 5. 最后查看 Git diff
 
+## 今日 Pi 命令实操
+
+今天使用项目级 Skill，避免一开始污染所有项目的全局配置。
+
+在终端创建目录：
+
+```bash
+cd ~/Documents/agent-lab
+mkdir -p .pi/skills/c-language-check
+```
+
+然后用 VS Code 创建并编写：
+
+```text
+.pi/skills/c-language-check/SKILL.md
+```
+
+先禁用自动发现的 Skills，完成一次基线实验：
+
+```bash
+pi --no-skills --tools read,edit,bash
+```
+
+再只显式加载你自己写的 Skill：
+
+```bash
+pi --no-skills \
+  --skill ./.pi/skills/c-language-check/SKILL.md \
+  --tools read,edit,bash
+```
+
+进入 Pi 后，可以输入：
+
+```text
+/skill:c-language-check
+```
+
+如果 Pi 已经在运行，而你刚修改了 `SKILL.md`，输入：
+
+```text
+/reload
+```
+
+再重新调用 Skill。今天的重点是比较“没有 Skill”和“显式加载 Skill”时，Agent 的工作流程有什么不同。
+
 ## 实验
 
 分别：
@@ -1291,6 +1396,48 @@ Agent 调用工具时
 ```
 
 不要一开始做复杂自动化。
+
+## 今日 Pi 命令实操
+
+项目级 Extension 放在：
+
+```text
+.pi/extensions/
+```
+
+在实验仓库中准备目录：
+
+```bash
+cd ~/Documents/agent-lab
+mkdir -p .pi/extensions
+```
+
+完成 `tool-observer.ts` 后，先禁用自动发现，只加载这一份 Extension：
+
+```bash
+pi --no-extensions \
+  --extension ./.pi/extensions/tool-observer.ts
+```
+
+短参数写法是：
+
+```bash
+pi --no-extensions -e ./.pi/extensions/tool-observer.ts
+```
+
+修改 Extension 后，在 Pi 中输入：
+
+```text
+/reload
+```
+
+完全禁用 Extension 做对照：
+
+```bash
+pi --no-extensions
+```
+
+今天不要安装来源不明的第三方 Extension；你的目标只是理解它如何改变 Harness 行为。
 
 ## 第二个实验：危险命令确认
 
@@ -1403,6 +1550,110 @@ Memory ≠ 文件系统
 - 哪些内容可能被总结
 - 重新开启 Session 后发生什么
 
+## 今日 Pi 命令实操：创建、退出与恢复 Session
+
+### 1. 创建并命名一次 Session
+
+在终端启动：
+
+```bash
+cd ~/Documents/agent-lab
+pi --name "day09-session"
+```
+
+进入 Pi 后依次输入：
+
+```text
+/session
+/name day09-session
+```
+
+`/session` 用于查看当前 Session 的 ID、文件、消息、Token 和成本等信息；把 Session ID 记到当天笔记，但不要手动修改 Session JSONL 文件。
+
+完成几轮对话后退出：
+
+```text
+/quit
+```
+
+### 2. 恢复 Session
+
+方法 A：启动 Pi 后，在交互界面中选择旧 Session：
+
+```bash
+pi
+```
+
+```text
+/resume
+```
+
+方法 B：在终端直接打开 Session 选择器：
+
+```bash
+pi -r
+```
+
+方法 C：在终端直接继续当前目录最近一次 Session：
+
+```bash
+pi -c
+```
+
+必须分清：
+
+```text
+/resume  → Pi 交互界面内的命令
+pi -r    → zsh 中执行的启动命令
+pi -c    → 直接继续最近一次 Session
+```
+
+### 3. Session 树、分支与新会话
+
+恢复后依次体验：
+
+```text
+/tree
+/fork
+/clone
+/new
+```
+
+- `/tree`：回到历史中的某个位置，并从那里继续，原历史仍保留。
+- `/fork`：从某条旧的用户消息创建新的 Session。
+- `/clone`：把当前活动分支复制为一个新 Session。
+- `/new`：开始一个全新的 Session。
+
+### 4. 手动 Compaction
+
+在已有较长历史的 Session 中先查看：
+
+```text
+/session
+```
+
+然后执行：
+
+```text
+/compact
+```
+
+也可以附加自定义要求：
+
+```text
+/compact 请保留已经修改的文件、编译命令、失败原因和下一步任务
+```
+
+再次执行 `/session`，观察 Context 变化。要记住：Compaction 有损，但完整历史仍保存在 Session 文件中，可通过 `/tree` 回看。
+
+### 5. 不保存 Session 的对照实验
+
+```bash
+pi --no-session
+```
+
+退出后尝试恢复，理解“临时对话”和“可恢复 Session”的区别。
+
 ## 思考
 
 为什么无限往 Context 塞东西不是好事？
@@ -1444,6 +1695,39 @@ Current Model Input
 把常见 Agent 术语放回正确层级。
 
 今天主要理解，不追求搭建复杂系统。
+
+## 今日 Pi 命令实操
+
+Pi 核心默认不内置 Plan Mode、MCP 和 Sub-agent。今天先用命令验证“核心有什么”，不要为了凑功能急着安装第三方包。
+
+查看当前版本、帮助和已安装资源：
+
+```bash
+pi --version
+pi --help
+pi list
+pi config
+```
+
+启动一个不带 Tool、Skills 和 Extensions 的纯规划对话：
+
+```bash
+cd ~/Documents/agent-lab
+pi --no-tools --no-skills --no-extensions \
+  "先只为这个项目制定排错计划，不要执行任何操作。"
+```
+
+再启动只读版本，让 Pi 根据真实文件修正计划：
+
+```bash
+pi --tools read,grep,find,ls \
+  --no-skills --no-extensions \
+  "阅读项目后制定排错计划，不要修改文件。"
+```
+
+对比两次结果，回答：计划差异来自模型本身，还是来自可用 Context 与 Tools？
+
+如果以后要体验 MCP、Sub-agent 或 Plan Mode，应把它当作 Extension / Package 带来的 Harness 扩展，并先审查来源、代码和权限；今天不安装。
 
 ## Planning
 
@@ -1545,6 +1829,34 @@ MCP / Sub-agent / Planning / Autonomous
 把前 10 天学到的知识重新套回 Codex。
 
 今天重点不是“Codex 教程”，而是架构分析。
+
+## 今日 Pi 对照命令
+
+先用 Pi 做一个只读对照，保留输出供后面与 Codex 比较：
+
+```bash
+cd ~/Documents/agent-lab
+pi -p --tools read,grep,find,ls \
+  "说明这个项目的结构、编译方法和你实际使用的工具。不要修改文件。"
+```
+
+`-p` / `--print` 表示非交互执行一次并退出。
+
+再观察结构化事件流：
+
+```bash
+pi --mode json --tools read,grep,find,ls \
+  "列出项目结构，不要修改文件。"
+```
+
+做一次 Context 对照：
+
+```bash
+pi -p --no-context-files --tools read,grep,find,ls \
+  "说明这个项目的编译命令。"
+```
+
+将结果与正常加载 `AGENTS.md` 时比较。`--no-context-files` 只关闭 Pi 对 `AGENTS.md` / `CLAUDE.md` 的自动发现，不会删除磁盘上的文件。
 
 ## 观察维度
 
@@ -1692,6 +2004,32 @@ Diff / Answer
 
 这正是专业习惯。
 
+## 今日 Pi 信息采集命令
+
+只记录你当前安装版本真实显示的信息：
+
+```bash
+pi --version
+pi --help
+pi --list-models
+pi list
+pi config
+```
+
+进入 Pi 后再查看：
+
+```text
+/hotkeys
+/settings
+/session
+/model
+/thinking
+```
+
+可选：用 `/scoped-models` 设置允许快捷切换的模型范围，然后用 `Ctrl+P` / `Shift+Ctrl+P` 观察模型切换。
+
+今天把这些实际输出填进比较矩阵；如果某个工具没有对应能力，就写“无内置能力”或“待查”，不要凭印象补齐。
+
 ## 今日重点
 
 学会面对陌生 Agent 时先问：
@@ -1730,6 +2068,39 @@ Diff / Answer
 目的只有一个：
 
 > **亲手证明 Coding Agent 的核心机制没有魔法。**
+
+## 今日 Pi 对照命令
+
+在写 Mini Agent 前，用 Pi 做三组对照：
+
+```bash
+cd ~/Documents/agent-lab
+
+pi -p --no-tools \
+  "告诉我 c/hello.c 的具体内容。"
+
+pi -p --tools read \
+  "读取 c/hello.c，并概括 main 函数做了什么。"
+
+pi --mode json --tools read \
+  "读取 c/hello.c，并概括 main 函数做了什么。"
+```
+
+观察：
+
+```text
+没有 read Tool 时，模型不能可靠知道磁盘文件内容
+有 read Tool 时，出现 Tool Call 与 Tool Result
+JSON 模式会把 Agent 运行事件作为 JSONL 输出
+```
+
+可选进阶，只启动并观察 RPC 模式的输入输出形式，不要求今天实现客户端：
+
+```bash
+pi --mode rpc
+```
+
+随后再写自己的 Python Mini Agent，把 Pi 的事件流程作为参照物。
 
 ## Day 13 模型接入固定方案
 
@@ -2045,6 +2416,39 @@ Tool → Model → Tool → Model
 检查
 ```
 
+先建立 Git checkpoint，再用明确的工具集合和命名 Session 启动：
+
+```bash
+cd ~/Documents/agent-lab
+git status
+git add .
+git commit -m "checkpoint before day14 graduation"
+
+pi --name "day14-graduation" \
+  --tools read,grep,find,ls,edit,bash
+```
+
+完成任务后，在 Pi 中查看并导出 Session：
+
+```text
+/session
+/export ./experiments/day14-pi-session.html
+/quit
+```
+
+然后在终端验证：
+
+```bash
+git status
+git diff
+```
+
+如果需要继续刚才的验收 Session：
+
+```bash
+pi -c
+```
+
 ### Round 2：Codex
 
 完成类似任务。
@@ -2336,6 +2740,56 @@ Git
 不是 sandbox
 ```
 
+### 6. Pi 常用命令速查
+
+先区分命令运行位置：
+
+| 写法 | 在哪里输入 | 用途 |
+|---|---|---|
+| `pi` | zsh 终端 | 启动 Pi |
+| `pi -c` | zsh 终端 | 继续当前目录最近一次 Session |
+| `pi -r` | zsh 终端 | 启动 Session 选择器 |
+| `/resume` | Pi 交互界面 | 选择并恢复旧 Session |
+| `/session` | Pi 交互界面 | 查看当前 Session 信息 |
+| `/new` | Pi 交互界面 | 创建新 Session |
+| `/tree` | Pi 交互界面 | 在当前 Session 历史树中跳转 |
+| `/fork` | Pi 交互界面 | 从旧消息分叉出新 Session |
+| `/clone` | Pi 交互界面 | 复制当前活动分支为新 Session |
+| `/compact` | Pi 交互界面 | 手动压缩当前 Context |
+| `/model` | Pi 交互界面 | 选择模型 |
+| `/thinking` | Pi 交互界面 | 选择思考等级 |
+| `/settings` | Pi 交互界面 | 修改常用设置 |
+| `/reload` | Pi 交互界面 | 重新加载 Skills、Extensions 等资源 |
+| `/quit` | Pi 交互界面 | 退出 Pi |
+
+常用终端启动形式：
+
+```bash
+# 查看版本与帮助
+pi --version
+pi --help
+
+# 单次执行后退出
+pi -p "分析当前项目"
+
+# 只读工具集合
+pi --tools read,grep,find,ls
+
+# 不保存本次 Session
+pi --no-session
+
+# 不自动加载项目说明文件
+pi --no-context-files
+
+# 只加载指定 Skill
+pi --no-skills --skill ./path/to/SKILL.md
+
+# 只加载指定 Extension
+pi --no-extensions -e ./path/to/extension.ts
+```
+
+这张表用于复习，不代替每天的实验。具体参数仍以你本机 `pi --help` 的输出为准。
+
 ---
 
 # 十一、Codex 对照时要关注的重点
@@ -2373,11 +2827,11 @@ Git？
 
 | Day | 主题 | 状态 |
 |---|---|---|
-| 01 | LLM / Agent / Harness / Agent Loop | ⬜ |
-| 02 | Tool Calling | ⬜ |
-| 03 | Context / Prompt / Project Instructions | ⬜ |
-| 04 | Permission / Sandbox / Approval / Prompt Injection | ⬜ |
-| 05 | Pi 基础与裸 Agent | ⬜ |
+| 01 | LLM / Agent / Harness / Agent Loop | ✅ 已完成 |
+| 02 | Tool Calling | ✅ 已完成 |
+| 03 | Context / Prompt / Project Instructions | ✅ 已完成 |
+| 04 | Permission / Sandbox / Approval / Prompt Injection | ✅ 已完成 |
+| 05 | Pi 基础与裸 Agent | ✅ 已完成 |
 | 06 | Tool Allowlist 与最小权限 | ⬜ |
 | 07 | Skills | ⬜ |
 | 08 | Extensions / Hooks | ⬜ |
