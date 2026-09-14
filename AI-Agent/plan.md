@@ -2832,10 +2832,10 @@ Git？
 | 03 | Context / Prompt / Project Instructions | ✅ 已完成 |
 | 04 | Permission / Sandbox / Approval / Prompt Injection | ✅ 已完成 |
 | 05 | Pi 基础与裸 Agent | ✅ 已完成 |
-| 06 | Tool Allowlist 与最小权限 | ⬜ |
-| 07 | Skills | ⬜ |
-| 08 | Extensions / Hooks | ⬜ |
-| 09 | Session / Context Window / Compaction / Memory | ⬜ |
+| 06 | Tool Allowlist 与最小权限 | ✅ 已完成 |
+| 07 | Skills | ✅ 已完成 |
+| 08 | Extensions / Hooks | ✅ 已完成 |
+| 09 | Session / Context Window / Compaction / Memory | ✅ 已完成 |
 | 10 | Planning / MCP / Sub-agent / Autonomy | ⬜ |
 | 11 | Codex 架构拆解 | ⬜ |
 | 12 | Pi / Codex / Copilot CLI / OpenCode 横向分析 | ⬜ |
