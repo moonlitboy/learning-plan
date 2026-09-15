@@ -2836,11 +2836,11 @@ Git？
 | 07 | Skills | ✅ 已完成 |
 | 08 | Extensions / Hooks | ✅ 已完成 |
 | 09 | Session / Context Window / Compaction / Memory | ✅ 已完成 |
-| 10 | Planning / MCP / Sub-agent / Autonomy | ⬜ |
-| 11 | Codex 架构拆解 | ⬜ |
-| 12 | Pi / Codex / Copilot CLI / OpenCode 横向分析 | ⬜ |
-| 13 | Mini Agent | ⬜ |
-| 14 | 综合实验 + 毕业答辩 | ⬜ |
+| 10 | Planning / MCP / Sub-agent / Autonomy | ✅ 已完成 |
+| 11 | Codex 架构拆解 | ✅ 已完成 |
+| 12 | Pi / Codex / Copilot CLI / OpenCode 横向分析 | ✅ 已完成 |
+| 13 | Mini Agent | ✅ 已完成 |
+| 14 | 综合实验 + 毕业答辩 | ✅ 已完成 |
 
 ---
 
